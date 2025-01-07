@@ -6,40 +6,37 @@ const bodyParser = require("body-parser");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Proxy endpoint
+// ConvertKit Proxy Endpoint
 app.post("/subscribe", async (req, res) => {
-  const { email, token } = req.body;
-
-  // Optional token validation for security
-  if (token !== process.env.ACCESS_TOKEN) {
-    return res.status(403).json({ error: "Unauthorized" });
-  }
+  const { email } = req.body;
 
   if (!email) {
     return res.status(400).json({ error: "Email is required" });
   }
 
+  const apiKey = process.env.CONVERTKIT_API_KEY;
+  const formId = process.env.CONVERTKIT_FORM_ID;
+
   try {
     const response = await fetch(
-      `https://api.convertkit.com/v3/forms/${process.env.CONVERTKIT_FORM_ID}/subscribe`,
+      `https://api.convertkit.com/v3/forms/${formId}/subscribe`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          api_key: process.env.CONVERTKIT_API_KEY,
+          api_key: apiKey,
           email: email,
         }),
       }
     );
 
     const data = await response.json();
-    res.status(response.ok ? 200 : 500).json(data);
+    res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ error: "Something went wrong" });
   }
